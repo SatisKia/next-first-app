@@ -1,3 +1,4 @@
+import './api/Global.js';
 import styles from '@/styles/option.module.css';
 import React from 'react';
 import Router from 'next/router';
@@ -8,8 +9,8 @@ class MyOption extends React.Component {
     super(props);
 
     this.state = {
-      italicFlag: global.calc.italicFlag,
-      separatorType: global.calc.separatorType
+      italicFlag: false,//global.calc.italicFlag,
+      separatorType: global.calc.separatorTypeNone,//global.calc.separatorType,
     };
 
     this.handleChangeItalic = this.handleChangeItalic.bind(this);
@@ -113,6 +114,9 @@ class MyOption extends React.Component {
     if (query.returnRoute) {
       this.returnRoute = query.returnRoute;
     }
+
+    this.setState({ italicFlag: global.calc.italicFlag });
+    this.setState({ separatorType: global.calc.separatorType });
   }
 
   componentDidUpdate() {

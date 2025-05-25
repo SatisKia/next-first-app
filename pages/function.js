@@ -1,3 +1,4 @@
+import './api/Global.js';
 import styles from '@/styles/function.module.css';
 import React from 'react';
 import Router from 'next/router';
@@ -68,7 +69,7 @@ class MyFunctionA extends React.Component {
       dispAngle: "RAD",
       dispMemory: "0",
       mrcButtonText: "MR",
-      memoryRecalled: global.calc.memoryRecalled,
+      memoryRecalled: false,//global.calc.memoryRecalled,
     };
     this.setDispStr = this.setDispStr.bind(this);
     this.setDispAngle = this.setDispAngle.bind(this);
@@ -166,6 +167,8 @@ class MyFunctionA extends React.Component {
 
   componentDidMount() {
     console.log("MyFunctionA componentDidMount");
+
+    this.setState({ memoryRecalled: global.calc.memoryRecalled });
   }
 
   componentWillUnmount() {

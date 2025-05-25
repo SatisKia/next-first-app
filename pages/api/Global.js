@@ -94,12 +94,13 @@ global.calc.save = (flag) => {
 };
 
 global.calc.isEnglish = () => {
-/*
-  const language = (window.navigator.languages && window.navigator.languages[0]) ||
-    window.navigator.browserLanguage ||
-    window.navigator.language ||
-    window.navigator.userLanguage;
-  return language.substring(0, 2) === "en";
-*/
+  if (typeof window !== 'undefined') {
+    // クライアントサイドレンダリング時
+    const language = (window.navigator.languages && window.navigator.languages[0]) ||
+      window.navigator.browserLanguage ||
+      window.navigator.language ||
+      window.navigator.userLanguage;
+    return language.substring(0, 2) === "en";
+  }
   return false;
 };

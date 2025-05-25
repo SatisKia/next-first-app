@@ -1,13 +1,19 @@
 import './api/Global.js';
-import Number from "./number";
+import { useEffect } from 'react';
+import Router from 'next/router';
 
 export default function Root() {
   console.log("function Root");
 
-  // グローバルデータ
-  global.calc.init();
+  useEffect(() => {
+    // グローバルデータ
+    global.calc.init();
+
+    Router.replace("/number");
+  }, []);
 
   return (
-    <Number />
+    <>
+    </>
   );
 }

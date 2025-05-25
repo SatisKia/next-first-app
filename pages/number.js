@@ -1,3 +1,4 @@
+import './api/Global.js';
 import styles from '@/styles/number.module.css';
 import React from 'react';
 import Router from 'next/router';
@@ -79,7 +80,7 @@ class MyNumberA extends React.Component {
       dispAnswer: "0",
       dispMemory: "0",
       mrcButtonText: "MR",
-      memoryRecalled: global.calc.memoryRecalled,
+      memoryRecalled: false,//global.calc.memoryRecalled,
     };
     this.setDispStr = this.setDispStr.bind(this);
     this.setDispLog = this.setDispLog.bind(this);
@@ -181,6 +182,8 @@ class MyNumberA extends React.Component {
 
   componentDidMount() {
     console.log("MyNumberA componentDidMount");
+
+    this.setState({ memoryRecalled: global.calc.memoryRecalled });
   }
 
   componentWillUnmount() {
