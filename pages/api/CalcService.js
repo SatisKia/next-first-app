@@ -1,65 +1,48 @@
-class CalcService {
-  setDispError( type ){}
-  setDispResult( value ){}
-  setDispEntry( entry ){}
-  clearDispLog(){}
-  setDispLog( value, opType ){}
-  addDispLog( value ){}
-  setDispAnswer( value ){}
-  setDispMemory( value ){}
-  memoryRecalled( flag ){}
-  entryChanged( flag ){}
-  errorChanged( flag ){}
+const noop = () => {};
 
-  init(){
-    this.setEntry( global.calc.answer ); // 計算結果をセット
-    this.updateEntryStr( true );
-    global.calc.opFlag = true; // 次に数値入力ボタンが押された場合にprocOpが発動するように
-    global.calc.opType = global.calc.opTypeSet;
-    global.calc.nextOpType = global.calc.opTypeSet;
-    global.calc.errorFlag = false;
+export function createCalcService(api = {}) {
+  const setDispError = api.setDispError ?? noop;
+  const setDispResult = api.setDispResult ?? noop;
+  const setDispEntry = api.setDispEntry ?? noop;
+  const clearDispLog = api.clearDispLog ?? noop;
+  const setDispLog = api.setDispLog ?? noop;
+  const addDispLog = api.addDispLog ?? noop;
+  const setDispAnswer = api.setDispAnswer ?? noop;
+  const setDispMemory = api.setDispMemory ?? noop;
+  const memoryRecalled = api.memoryRecalled ?? noop;
+  const entryChanged = api.entryChanged ?? noop;
+  const errorChanged = api.errorChanged ?? noop;
 
-    this.clearDispLog(); // 最初に実行する
-    this.setDispEntry( global.calc.entryStr );
-    this.setDispAnswer( global.calc.answer );
-    this.setDispMemory( global.calc.memory );
-    this.memoryRecalled( global.calc.memoryRecalled );
-    this.entryChanged( global.calc.entryFlag );
-    this.errorChanged( global.calc.errorFlag );
-  }
-
-  // 浮動小数点数表記文字列の最適化
-  valueToString( value, prec ){
-    let str1 = value.toPrecision( prec );
+  function valueToString(value, prec) {
+    let str1 = value.toPrecision(prec);
     let str2 = "";
-    let top = str1.indexOf( "e" );
-    if( top >= 0 ){
-      str2 = str1.substring( top, str1.length );
-      str1 = str1.substring( 0, top );
+    const top = str1.indexOf("e");
+    if (top >= 0) {
+      str2 = str1.substring(top, str1.length);
+      str1 = str1.substring(0, top);
     }
-    let min = str1.indexOf( "." );
-    if( min >= 0 ){
+    let min = str1.indexOf(".");
+    if (min >= 0) {
       let len = str1.length;
-      while( len > min ){
-        let tmp = str1.substring( len - 1, len );
-        if( tmp != "0" && tmp != "." ){
+      while (len > min) {
+        const tmp = str1.substring(len - 1, len);
+        if (tmp != "0" && tmp != ".") {
           break;
         }
         len--;
       }
-      str1 = str1.substring( 0, len );
+      str1 = str1.substring(0, len);
     }
     return str1 + str2;
   }
 
-  // 桁区切り
-  sepString( str, sep ){
+  function sepString(str, sep) {
     try {
-      let tmp = Number(str);
-      if( !Number.isFinite( tmp ) || Number.isNaN( tmp ) ){
+      const tmp = Number(str);
+      if (!Number.isFinite(tmp) || Number.isNaN(tmp)) {
         return str;
       }
-    } catch( e ){
+    } catch (e) {
       return str;
     }
 
@@ -74,39 +57,37 @@ class CalcService {
     src = str;
     dst = '';
     top = 0;
-    while( true ){
+    while (true) {
       _float = false;
 
-      // 先頭を求める
       _break = false;
-      for( ; top < src.length; top++ ){
-        switch( src.substring( top, top + 1 ) ){
+      for (; top < src.length; top++) {
+        switch (src.substring(top, top + 1)) {
           case '+':
           case '-':
           case '.':
           case 'e':
           case 'E':
-            if( src.substring( top, top + 1 ) == '.' ){
+            if (src.substring(top, top + 1) == '.') {
               _float = true;
             }
-            dst += src.substring( top, top + 1 );
+            dst += src.substring(top, top + 1);
             break;
           default:
             _break = true;
             break;
         }
-        if( _break ){
+        if (_break) {
           break;
         }
       }
-      if( top >= src.length ){
+      if (top >= src.length) {
         break;
       }
 
-      // 末尾を求める
       _break = false;
-      for( end = top + 1; end < src.length; end++ ){
-        switch( src.substring( end, end + 1 ) ){
+      for (end = top + 1; end < src.length; end++) {
+        switch (src.substring(end, end + 1)) {
           case '+':
           case '-':
           case '.':
@@ -115,15 +96,15 @@ class CalcService {
             _break = true;
             break;
         }
-        if( _break ){
+        if (_break) {
           break;
         }
       }
 
-      for( len = end - top; len > 0; len-- ){
-        dst += src.substring( top, top + 1 );
+      for (len = end - top; len > 0; len--) {
+        dst += src.substring(top, top + 1);
         top++;
-        if( !_float && (len != 1) && ((len % 3) == 1) ){
+        if (!_float && (len != 1) && ((len % 3) == 1)) {
           dst += sep;
         }
       }
@@ -132,113 +113,152 @@ class CalcService {
     return dst;
   }
 
-  // 入力値
-  updateEntryStr( testFlag ){
-    if( !global.calc.entryFlag ){
-      global.calc.entryStr = this.valueToString( global.calc.entry, 15 );
-      if( !testFlag ){
+  function updateEntryStr(testFlag) {
+    if (!global.calc.entryFlag) {
+      global.calc.entryStr = valueToString(global.calc.entry, 15);
+      if (!testFlag) {
         global.calc.entryFlag = true;
-        this.entryChanged( global.calc.entryFlag );
+        entryChanged(global.calc.entryFlag);
       }
     }
   }
-  setEntry( value ){
+
+  function setEntry(value) {
     global.calc.entry = value;
     global.calc.entryFlag = false;
-    this.entryChanged( global.calc.entryFlag );
+    entryChanged(global.calc.entryFlag);
 
-    if( global.calc.entry.isInfinite ){
+    if (global.calc.entry.isInfinite) {
       global.calc.errorFlag = true;
       global.calc.errorType = (global.calc.entry == Number.NEGATIVE_INFINITY) ? global.calc.errorTypeNegativeInfinity : global.calc.errorTypePositiveInfinity;
-      this.errorChanged( global.calc.errorFlag );
-    } else if( Number.isNaN( global.calc.entry ) ){
+      errorChanged(global.calc.errorFlag);
+    } else if (Number.isNaN(global.calc.entry)) {
       global.calc.errorFlag = true;
       global.calc.errorType = global.calc.errorTypeNotANumber;
-      this.errorChanged( global.calc.errorFlag );
+      errorChanged(global.calc.errorFlag);
     }
   }
-  getEntry(){
-    return global.calc.entryFlag ? Number( global.calc.entryStr ) : global.calc.entry;
+
+  function getEntry() {
+    return global.calc.entryFlag ? Number(global.calc.entryStr) : global.calc.entry;
   }
 
-  // メモリーの操作
-  setMemoryRecalled( recalled ){
+  function setMemoryRecalled(recalled) {
     global.calc.memoryRecalled = recalled;
-    this.memoryRecalled( recalled );
+    memoryRecalled(recalled);
   }
-  addMemory(){
+
+  function addMemory() {
     global.calc.memory += global.calc.answer;
-    this.setMemoryRecalled( false );
-    global.calc.save( global.calc.saveMemory | global.calc.saveMemoryRecalled );
-    this.setDispMemory( global.calc.memory );
+    setMemoryRecalled(false);
+    global.calc.save(global.calc.saveMemory | global.calc.saveMemoryRecalled);
+    setDispMemory(global.calc.memory);
   }
-  subMemory(){
+
+  function subMemory() {
     global.calc.memory -= global.calc.answer;
-    this.setMemoryRecalled( false );
-    global.calc.save( global.calc.saveMemory | global.calc.saveMemoryRecalled );
-    this.setDispMemory( global.calc.memory );
+    setMemoryRecalled(false);
+    global.calc.save(global.calc.saveMemory | global.calc.saveMemoryRecalled);
+    setDispMemory(global.calc.memory);
   }
-  recallMemory(){
-    if( global.calc.opType == global.calc.opTypeSet ){
-      this.clearDispLog();
+
+  function recallMemory() {
+    if (global.calc.opType == global.calc.opTypeSet) {
+      clearDispLog();
     }
 
-    this.setEntry( global.calc.memory );
-    this.updateEntryStr( true );
-    this.setDispStr( false );
+    setEntry(global.calc.memory);
+    updateEntryStr(true);
+    setDispStr(false);
 
-    this.setMemoryRecalled( true );
-    global.calc.save( global.calc.saveMemoryRecalled );
+    setMemoryRecalled(true);
+    global.calc.save(global.calc.saveMemoryRecalled);
   }
-  clearMemory(){
+
+  function clearMemory() {
     global.calc.memory = 0.0;
-    this.setMemoryRecalled( false );
-    global.calc.save( global.calc.saveMemory | global.calc.saveMemoryRecalled );
-    this.setDispMemory( global.calc.memory );
+    setMemoryRecalled(false);
+    global.calc.save(global.calc.saveMemory | global.calc.saveMemoryRecalled);
+    setDispMemory(global.calc.memory);
   }
 
-  // 入力値の操作
-  clearEntry( allFlag ){
-    this.setEntry( 0.0 );
+  function clearEntry(allFlag) {
+    setEntry(0.0);
     global.calc.entryStr = "0";
     global.calc.opFlag = false;
     global.calc.errorFlag = false;
-    this.errorChanged( global.calc.errorFlag );
+    errorChanged(global.calc.errorFlag);
 
-    this.setMemoryRecalled( false );
+    setMemoryRecalled(false);
 
-    if( global.calc.opType == global.calc.opTypeSet || allFlag ){
+    if (global.calc.opType == global.calc.opTypeSet || allFlag) {
       global.calc.answer = 0.0;
-      global.calc.save( global.calc.saveMemoryRecalled | global.calc.saveAnswer );
-      this.setDispAnswer( global.calc.answer );
+      global.calc.save(global.calc.saveMemoryRecalled | global.calc.saveAnswer);
+      setDispAnswer(global.calc.answer);
       global.calc.opType = global.calc.opTypeSet;
-      this.clearDispLog();
+      clearDispLog();
     } else {
-      global.calc.save( global.calc.saveMemoryRecalled );
+      global.calc.save(global.calc.saveMemoryRecalled);
     }
-    this.setDispStr( false );
+    setDispStr(false);
   }
-  clearAndSetEntry( value ){
-    if( global.calc.opType == global.calc.opTypeSet ){
-      this.clearDispLog();
+
+  function clearAndSetEntry(value) {
+    if (global.calc.opType == global.calc.opTypeSet) {
+      clearDispLog();
     }
 
-    this.setEntry( value );
-    this.updateEntryStr( true );
-    this.setDispStr( false );
+    setEntry(value);
+    updateEntryStr(true);
+    setDispStr(false);
 
-    this.setMemoryRecalled( false );
-    global.calc.save( global.calc.saveMemoryRecalled );
+    setMemoryRecalled(false);
+    global.calc.save(global.calc.saveMemoryRecalled);
   }
-  setDispStr( opFlag ){
-    if( global.calc.errorFlag ){
-      this.setDispError( global.calc.errorType );
-    } else if( opFlag && Number( global.calc.entryStr ) == 0 && global.calc.answer != 0 ){
-      this.setDispResult( global.calc.answer );
+
+  function setDispStr(opFlag) {
+    if (global.calc.errorFlag) {
+      setDispError(global.calc.errorType);
+    } else if (opFlag && Number(global.calc.entryStr) == 0 && global.calc.answer != 0) {
+      setDispResult(global.calc.answer);
     } else {
-      this.setDispEntry( global.calc.entryStr );
+      setDispEntry(global.calc.entryStr);
     }
   }
+
+  function init() {
+    setEntry(global.calc.answer);
+    updateEntryStr(true);
+    global.calc.opFlag = true;
+    global.calc.opType = global.calc.opTypeSet;
+    global.calc.nextOpType = global.calc.opTypeSet;
+    global.calc.errorFlag = false;
+
+    clearDispLog();
+    setDispEntry(global.calc.entryStr);
+    setDispAnswer(global.calc.answer);
+    setDispMemory(global.calc.memory);
+    memoryRecalled(global.calc.memoryRecalled);
+    entryChanged(global.calc.entryFlag);
+    errorChanged(global.calc.errorFlag);
+  }
+
+  return {
+    init,
+    valueToString,
+    sepString,
+    updateEntryStr,
+    setEntry,
+    getEntry,
+    setMemoryRecalled,
+    addMemory,
+    subMemory,
+    recallMemory,
+    clearMemory,
+    clearEntry,
+    clearAndSetEntry,
+    setDispStr,
+  };
 }
 
-export default CalcService;
+export default createCalcService;

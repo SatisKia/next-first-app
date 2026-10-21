@@ -1,4 +1,4 @@
-import MyCookie from './Cookie.js';
+import createCookie from './Cookie.js';
 
 global.calc = {};
 
@@ -30,7 +30,7 @@ global.calc.separatorTypeDash  = 1;
 global.calc.separatorTypeComma = 2;
 
 global.calc.init = () => {
-  let cookie = new MyCookie();
+  let cookie = createCookie();
 
   global.calc.mode = global.calc.modeNumber;
   global.calc.returnMode = global.calc.mode;
@@ -71,7 +71,7 @@ global.calc.saveAngleType      = 0x00000008;
 global.calc.saveItalicFlag     = 0x00000010;
 global.calc.saveSeparatorType  = 0x00000020;
 global.calc.save = (flag) => {
-  let cookie = new MyCookie();
+  let cookie = createCookie();
 
   if( (flag & global.calc.saveAnswer) !== 0 ){
     cookie.setNumber( "answer", global.calc.answer );

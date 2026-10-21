@@ -1,98 +1,120 @@
-import CalcService from './CalcService';
+import { createCalcService } from './CalcService';
 
-class CalcFunctionService extends CalcService {
-  angleChanged( type ){}
+const _pi = 3.14159265358979323846264;
+const _normalize = 0.434294481903251816668;
 
-  init(){
-    super.init();
-    this.angleChanged( global.calc.angleType );
+export function createCalcFunctionService(api = {}) {
+  const service = createCalcService(api);
+
+  function angleToRad(value) {
+    return (global.calc.angleType == global.calc.angleTypeRad) ? value : value * _pi / ((global.calc.angleType == global.calc.angleTypeDeg) ? 180.0 : 200.0);
   }
 
-  _pi        = 3.14159265358979323846264; // 円周率
-  _normalize = 0.434294481903251816668; // 1/log(10)
+  function radToAngle(value) {
+    return (global.calc.angleType == global.calc.angleTypeRad) ? value : value * ((global.calc.angleType == global.calc.angleTypeDeg) ? 180.0 : 200.0) / _pi;
+  }
 
-  // 角度の種類
-  setAngle( type ){
+  function setAngle(type) {
     global.calc.angleType = type;
-    global.calc.save( global.calc.saveAngleType );
+    global.calc.save(global.calc.saveAngleType);
 
-    this.angleChanged( global.calc.angleType );
+    api.angleChanged?.(global.calc.angleType);
   }
-  _angleToRad( value ){
-    return (global.calc.angleType == global.calc.angleTypeRad) ? value : value * this._pi / ((global.calc.angleType == global.calc.angleTypeDeg) ? 180.0 : 200.0);
-  }
-  _radToAngle( value ){
-    return (global.calc.angleType == global.calc.angleTypeRad) ? value : value * ((global.calc.angleType == global.calc.angleTypeDeg) ? 180.0 : 200.0) / this._pi;
-  }
-  angle(){
+
+  function angle() {
     return global.calc.angleType;
   }
 
-  // 数学関数
-  funcSin(){
-    this.clearAndSetEntry( Math.sin( this._angleToRad( this.getEntry() ) ) );
+  function funcSin() {
+    service.clearAndSetEntry(Math.sin(angleToRad(service.getEntry())));
   }
-  funcCos(){
-    this.clearAndSetEntry( Math.cos( this._angleToRad( this.getEntry() ) ) );
+  function funcCos() {
+    service.clearAndSetEntry(Math.cos(angleToRad(service.getEntry())));
   }
-  funcTan(){
-    this.clearAndSetEntry( Math.tan( this._angleToRad( this.getEntry() ) ) );
+  function funcTan() {
+    service.clearAndSetEntry(Math.tan(angleToRad(service.getEntry())));
   }
-  funcArcSin(){
-    this.clearAndSetEntry( this._radToAngle( Math.asin( this.getEntry() ) ) );
+  function funcArcSin() {
+    service.clearAndSetEntry(radToAngle(Math.asin(service.getEntry())));
   }
-  funcArcCos(){
-    this.clearAndSetEntry( this._radToAngle( Math.acos( this.getEntry() ) ) );
+  function funcArcCos() {
+    service.clearAndSetEntry(radToAngle(Math.acos(service.getEntry())));
   }
-  funcArcTan(){
-    this.clearAndSetEntry( this._radToAngle( Math.atan( this.getEntry() ) ) );
+  function funcArcTan() {
+    service.clearAndSetEntry(radToAngle(Math.atan(service.getEntry())));
   }
-  funcLog(){
-    this.clearAndSetEntry( Math.log( this.getEntry() ) );
+  function funcLog() {
+    service.clearAndSetEntry(Math.log(service.getEntry()));
   }
-  funcLog10(){
-    this.clearAndSetEntry( Math.log( this.getEntry() ) * this._normalize );
+  function funcLog10() {
+    service.clearAndSetEntry(Math.log(service.getEntry()) * _normalize);
   }
-  funcExp(){
-    this.clearAndSetEntry( Math.exp( this.getEntry() ) );
+  function funcExp() {
+    service.clearAndSetEntry(Math.exp(service.getEntry()));
   }
-  funcExp10(){
-    this.clearAndSetEntry( Math.exp( this.getEntry() / this._normalize ) );
+  function funcExp10() {
+    service.clearAndSetEntry(Math.exp(service.getEntry() / _normalize));
   }
-  funcSqr(){
-    let value = this.getEntry();
-    this.clearAndSetEntry( value * value );
+  function funcSqr() {
+    const value = service.getEntry();
+    service.clearAndSetEntry(value * value);
   }
-  funcSqrt(){
-    this.clearAndSetEntry( Math.sqrt( this.getEntry() ) );
+  function funcSqrt() {
+    service.clearAndSetEntry(Math.sqrt(service.getEntry()));
   }
 
-  funcInt(){
+  function funcInt() {
     try {
-      let tmp = this.getEntry();
-      if( tmp < 0.0 ){
-        tmp = Math.ceil( tmp );
+      let tmp = service.getEntry();
+      if (tmp < 0.0) {
+        tmp = Math.ceil(tmp);
       } else {
-        tmp = Math.floor( tmp );
+        tmp = Math.floor(tmp);
       }
-      this.clearAndSetEntry( tmp );
-    } catch(e){
+      service.clearAndSetEntry(tmp);
+    } catch (e) {
     }
   }
 
-  setOp(){
-    global.calc.answer = this.getEntry();
-    this.setDispAnswer( global.calc.answer );
+  function setOp() {
+    global.calc.answer = service.getEntry();
+    api.setDispAnswer?.(global.calc.answer);
 
-    this.setEntry( global.calc.answer );
-    this.updateEntryStr( true );
-    this.setDispStr( true );
+    service.setEntry(global.calc.answer);
+    service.updateEntryStr(true);
+    service.setDispStr(true);
 
-    global.calc.opFlag = true; // 次に数値入力ボタンが押された場合にprocOpが発動するように
+    global.calc.opFlag = true;
 
-    this.setMemoryRecalled( false );
-    global.calc.save( global.calc.saveAnswer | global.calc.saveMemoryRecalled );
+    service.setMemoryRecalled(false);
+    global.calc.save(global.calc.saveAnswer | global.calc.saveMemoryRecalled);
   }
+
+  function init() {
+    service.init();
+    api.angleChanged?.(global.calc.angleType);
+  }
+
+  return {
+    ...service,
+    init,
+    setAngle,
+    angle,
+    funcSin,
+    funcCos,
+    funcTan,
+    funcArcSin,
+    funcArcCos,
+    funcArcTan,
+    funcLog,
+    funcLog10,
+    funcExp,
+    funcExp10,
+    funcSqr,
+    funcSqrt,
+    funcInt,
+    setOp,
+  };
 }
 
-export default CalcFunctionService;
+export default createCalcFunctionService;

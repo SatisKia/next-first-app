@@ -1,14 +1,16 @@
 import Cookies from 'js-cookie';
 
-class MyCookie {
-  expires = "Tue, 01 Jan 2030 00:00:00 GMT";
+const DEFAULT_EXPIRES = "Tue, 01 Jan 2030 00:00:00 GMT";
 
-  setExpiresDate = (date) => {
-    let time = (new Date()).getTime();
-    this.expires = (new Date(time + date * 86400000)).toUTCString();
+export function createCookie(options = {}) {
+  let expires = options.expires ?? DEFAULT_EXPIRES;
+
+  const setExpiresDate = (date) => {
+    const time = (new Date()).getTime();
+    expires = (new Date(time + date * 86400000)).toUTCString();
   };
 
-  getArray = () => {
+  const getArray = () => {
     const cookie = [];
     const cookies = Cookies.get();
     if (cookies != null) {
@@ -19,32 +21,33 @@ class MyCookie {
     }
     return cookie;
   };
-  getParam = (cookie) => {
-    let param = cookie.split("=");
+
+  const getParam = (cookie) => {
+    const param = cookie.split("=");
     param[0] = param[0].replace(new RegExp("^\\s+"), "");
     return param;
   };
 
-  getNum = () => {
-    return this.getArray().length;
-  };
-  getKey = (index) => {
-    if (this.getNum() === 0) {
+  const getNum = () => getArray().length;
+
+  const getKey = (index) => {
+    if (getNum() === 0) {
       return "";
     }
-    let cookie = this.getArray();
+    const cookie = getArray();
     if (index >= cookie.length) {
       return "";
     }
-    let param = this.getParam(cookie[index]);
+    const param = getParam(cookie[index]);
     return param[0];
   };
-  getValue = (key, defValue) => {
-    let cookie = this.getArray();
+
+  const getValue = (key, defValue) => {
+    const cookie = getArray();
     for (let i = 0; i < cookie.length; i++ ){
-      let param = this.getParam(cookie[i]);
+      const param = getParam(cookie[i]);
       if (param[0] === key) {
-        let value = decodeURI(param[1]);
+        const value = decodeURI(param[1]);
         console.log("cookie getValue " + key + " " + value);
         return value;
       }
@@ -52,32 +55,42 @@ class MyCookie {
     console.log("cookie getDefValue " + key + " " + defValue);
     return defValue;
   };
-  getNumber = (key, defValue) => {
-    return Number(this.getValue(key, String(defValue)));
-  };
-  getBool = (key, defValue) => {
-    return Number(this.getValue(key, defValue ? "1" : "0")) !== 0;
-  };
 
-  setValue = (key, value) => {
+  const getNumber = (key, defValue) => Number(getValue(key, String(defValue)));
+
+  const getBool = (key, defValue) => Number(getValue(key, defValue ? "1" : "0")) !== 0;
+
+  const setValue = (key, value) => {
     console.log("cookie setValue " + key + " " + value);
     if (value == null) {
       value = "";
     }
-    let expires = this.expires;
+    let exp = expires;
     if (value.length === 0) {
-      let date = new Date();
+      const date = new Date();
       date.setTime(0);
-      expires = date.toUTCString();
+      exp = date.toUTCString();
     }
-    Cookies.set(key, encodeURI(value), { expires: (new Date(expires)) });
+    Cookies.set(key, encodeURI(value), { expires: (new Date(exp)) });
   };
-  setNumber = (key, value) => {
-    this.setValue(key, String(value));
-  };
-  setBool = (key, value) => {
-    this.setValue(key, value ? "1" : "0");
+
+  const setNumber = (key, value) => setValue(key, String(value));
+
+  const setBool = (key, value) => setValue(key, value ? "1" : "0");
+
+  return {
+    setExpiresDate,
+    getArray,
+    getParam,
+    getNum,
+    getKey,
+    getValue,
+    getNumber,
+    getBool,
+    setValue,
+    setNumber,
+    setBool,
   };
 }
 
-export default MyCookie;
+export default createCookie;

@@ -1,122 +1,127 @@
-import CalcService from './CalcService';
+import { createCalcService } from './CalcService';
 
-class CalcNumberService extends CalcService {
-  init(){
-    super.init();
-  }
+export function createCalcNumberService(api = {}) {
+  const service = createCalcService(api);
 
-  // 入力値の操作
-  delEntry(){
-    this.updateEntryStr( false );
-    if( global.calc.entryStr.length == 1 ){
+  function delEntry() {
+    service.updateEntryStr(false);
+    if (global.calc.entryStr.length == 1) {
       global.calc.entryStr = "0";
     } else {
-      global.calc.entryStr = global.calc.entryStr.substring( 0, global.calc.entryStr.length - 1 );
+      global.calc.entryStr = global.calc.entryStr.substring(0, global.calc.entryStr.length - 1);
     }
-    this.setDispStr( false );
+    service.setDispStr(false);
 
-    this.setMemoryRecalled( false );
-    global.calc.save( global.calc.saveMemoryRecalled );
+    service.setMemoryRecalled(false);
+    global.calc.save(global.calc.saveMemoryRecalled);
   }
-  addNumber( chr ){
-    this.procOp();
-    this.updateEntryStr( false );
-    if( global.calc.entryStr.indexOf( "." ) >= 0 ){
+
+  function addNumber(chr) {
+    procOp();
+    service.updateEntryStr(false);
+    if (global.calc.entryStr.indexOf(".") >= 0) {
       global.calc.entryStr += chr;
-    } else if( Number( global.calc.entryStr ) == 0.0 ){
+    } else if (Number(global.calc.entryStr) == 0.0) {
       global.calc.entryStr = chr;
     } else {
       global.calc.entryStr += chr;
     }
-    this.setDispStr( false );
+    service.setDispStr(false);
 
-    this.setMemoryRecalled( false );
-    global.calc.save( global.calc.saveMemoryRecalled );
+    service.setMemoryRecalled(false);
+    global.calc.save(global.calc.saveMemoryRecalled);
   }
-  addPoint(){
-    this.procOp();
-    this.updateEntryStr( false );
-    if( !global.calc.entryStr.indexOf( "." ) >= 0 ){
+
+  function addPoint() {
+    procOp();
+    service.updateEntryStr(false);
+    if (!global.calc.entryStr.indexOf(".") >= 0) {
       global.calc.entryStr += ".";
     }
-    this.setDispStr( false );
+    service.setDispStr(false);
 
-    this.setMemoryRecalled( false );
-    global.calc.save( global.calc.saveMemoryRecalled );
+    service.setMemoryRecalled(false);
+    global.calc.save(global.calc.saveMemoryRecalled);
   }
 
-  // 符号反転
-  negative(){
-    this.clearAndSetEntry( 0.0 - this.getEntry() );
+  function negative() {
+    service.clearAndSetEntry(0.0 - service.getEntry());
   }
 
-  // 演算の予約
-  setOp( type ){
+  function setOp(type) {
     global.calc.opFlag = true;
     global.calc.nextOpType = type;
-    this.procOp(); // 前回の演算を実行
+    procOp();
 
-    if( type == global.calc.opTypeSet ){
-      this.setEntry( global.calc.answer ); // 計算結果をセット
-      this.updateEntryStr( true );
-      global.calc.opFlag = true; // 次に数値入力ボタンが押された場合にprocOpが発動するように
+    if (type == global.calc.opTypeSet) {
+      service.setEntry(global.calc.answer);
+      service.updateEntryStr(true);
+      global.calc.opFlag = true;
     }
-    this.setDispStr( true );
+    service.setDispStr(true);
 
-    this.setMemoryRecalled( false );
-    global.calc.save( global.calc.saveMemoryRecalled );
+    service.setMemoryRecalled(false);
+    global.calc.save(global.calc.saveMemoryRecalled);
   }
 
-  // 演算の実行
-  procOp(){
-    if( global.calc.opFlag ){
-      if( global.calc.opType == global.calc.opTypeSet ){
-        global.calc.answer = this.getEntry();
-        global.calc.save( global.calc.saveAnswer );
-      } else if( global.calc.opType == global.calc.opTypeDiv ){
-        let value = this.getEntry();
-        if( value == 0.0 ){
+  function procOp() {
+    if (global.calc.opFlag) {
+      if (global.calc.opType == global.calc.opTypeSet) {
+        global.calc.answer = service.getEntry();
+        global.calc.save(global.calc.saveAnswer);
+      } else if (global.calc.opType == global.calc.opTypeDiv) {
+        const value = service.getEntry();
+        if (value == 0.0) {
           global.calc.errorFlag = true;
           global.calc.errorType = global.calc.errorTypeDivideByZero;
-          this.errorChanged( global.calc.errorFlag );
+          api.errorChanged?.(global.calc.errorFlag);
         } else {
           global.calc.answer /= value;
-          global.calc.save( global.calc.saveAnswer );
+          global.calc.save(global.calc.saveAnswer);
         }
-      } else if( global.calc.opType == global.calc.opTypeMul ){
-        global.calc.answer *= this.getEntry();
-        global.calc.save( global.calc.saveAnswer );
-      } else if( global.calc.opType == global.calc.opTypeSub ){
-        global.calc.answer -= this.getEntry();
-        global.calc.save( global.calc.saveAnswer );
-      } else if( global.calc.opType == global.calc.opTypeAdd ){
-        global.calc.answer += this.getEntry();
-        global.calc.save( global.calc.saveAnswer );
+      } else if (global.calc.opType == global.calc.opTypeMul) {
+        global.calc.answer *= service.getEntry();
+        global.calc.save(global.calc.saveAnswer);
+      } else if (global.calc.opType == global.calc.opTypeSub) {
+        global.calc.answer -= service.getEntry();
+        global.calc.save(global.calc.saveAnswer);
+      } else if (global.calc.opType == global.calc.opTypeAdd) {
+        global.calc.answer += service.getEntry();
+        global.calc.save(global.calc.saveAnswer);
       }
-      if( global.calc.errorFlag ){
+      if (global.calc.errorFlag) {
         return;
       }
-      this.setDispAnswer( global.calc.answer );
+      api.setDispAnswer?.(global.calc.answer);
 
-      if( global.calc.opType != global.calc.opTypeSet && global.calc.nextOpType == global.calc.opTypeSet ){
-        this.updateEntryStr( true );
-        this.addDispLog( this.getEntry() );
+      if (global.calc.opType != global.calc.opTypeSet && global.calc.nextOpType == global.calc.opTypeSet) {
+        service.updateEntryStr(true);
+        api.addDispLog?.(service.getEntry());
       } else {
-        if( global.calc.nextOpType == global.calc.opTypeSet ){
-          this.clearDispLog();
+        if (global.calc.nextOpType == global.calc.opTypeSet) {
+          api.clearDispLog?.();
         } else {
-          this.setDispLog( global.calc.answer, global.calc.nextOpType );
+          api.setDispLog?.(global.calc.answer, global.calc.nextOpType);
         }
       }
 
-      // 計算が終わったらクリア
-      this.setEntry( 0.0 );
+      service.setEntry(0.0);
       global.calc.entryStr = "0";
 
       global.calc.opFlag = false;
       global.calc.opType = global.calc.nextOpType;
     }
   }
+
+  return {
+    ...service,
+    delEntry,
+    addNumber,
+    addPoint,
+    negative,
+    setOp,
+    procOp,
+  };
 }
 
-export default CalcNumberService;
+export default createCalcNumberService;
